@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ReturnShield — Merchant Console</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0e10; --bg2: #141518; --bg3: #1c1e22; --bg4: #242629;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+  --text: #ececec; --text2: #9295a0; --text3: #5e6270;
+  --accent: #e84f4f; --accent2: #ff7a5a; --accent-glow: rgba(232,79,79,0.12);
+  --green: #3ecf8e; --amber: #f5a623; --blue: #4f9de8; --purple: #9b73f8;
+  --font: 'DM Sans', sans-serif; --mono: 'Space Mono', monospace;
+  --radius: 10px; --radius-lg: 14px;
+}
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; overflow: hidden; }
+
+.app { display: flex; height: 100vh; }
+
+/* ── Sidebar ── */
+.sidebar { width: 224px; min-width: 224px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.sidebar-logo { padding: 20px 16px 16px; border-bottom: 1px solid var(--border); }
+.logo-row { display: flex; align-items: center; gap: 10px; }
+.logo-shield { width: 34px; height: 34px; background: var(--accent); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.logo-shield svg { width: 19px; height: 19px; fill: white; }
+.logo-name { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+.logo-tag { font-size: 10px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.8px; margin-top: 1px; }
+
+.nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+.nav-group-label { font-size: 10px; font-family: var(--mono); color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase; padding: 8px 8px 5px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--text2); font-size: 13px; transition: all 0.14s; margin-bottom: 1px; border: 1px solid transparent; }
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--accent-glow); color: var(--accent); border-color: rgba(232,79,79,0.18); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.nav-badge { margin-left: auto; background: var(--accent); color: white; font-size: 10px; font-family: var(--mono); padding: 1px 6px; border-radius: 20px; font-weight: 700; }
+
+.sidebar-footer { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 9px; }
+.mer-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #9b73f8, #4f9de8); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; flex-shrink: 0; }
+.mer-name { font-size: 12px; font-weight: 500; }
+.mer-plan { font-size: 10px; color: var(--text3); }
+
+/* ── Main ── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.topbar-left h1 { font-size: 15px; font-weight: 600; }
+.topbar-left p { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 5px; animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.4} }
+.topbar-actions { display: flex; gap: 8px; }
+.btn { padding: 7px 13px; border-radius: 7px; font-size: 12px; font-weight: 500; border: none; cursor: pointer; font-family: var(--font); transition: all .14s; }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+.btn-ghost:hover { background: var(--bg3); color: var(--text); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #d44; }
+
+.content { flex: 1; overflow-y: auto; padding: 22px 24px; }
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Metric cards ── */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.mcard { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; position: relative; overflow: hidden; }
+.mcard::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 2px 2px 0 0; }
+.mcard.c-blue::after { background: var(--blue); }
+.mcard.c-green::after { background: var(--green); }
+.mcard.c-red::after { background: var(--accent); }
+.mcard.c-amber::after { background: var(--amber); }
+.mcard.c-purple::after { background: var(--purple); }
+.mlabel { font-size: 10px; color: var(--text3); font-family: var(--mono); letter-spacing: .7px; text-transform: uppercase; margin-bottom: 7px; }
+.mvalue { font-size: 26px; font-weight: 600; letter-spacing: -1.5px; line-height: 1; }
+.mdelta { font-size: 11px; margin-top: 5px; color: var(--text3); }
+.mdelta.up { color: var(--green); }
+.mdelta.down { color: var(--accent); }
+
+/* ── Grids ── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+/* ── Card ── */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.card-title { font-size: 13px; font-weight: 500; }
+.card-sub { font-size: 11px; color: var(--text3); }
+
+/* ── Table ── */
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th { text-align: left; padding: 0 10px 10px; color: var(--text3); font-family: var(--mono); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; font-weight: 400; }
+tbody tr { border-top: 1px solid var(--border); }
+tbody td { padding: 10px; color: var(--text2); vertical-align: middle; }
+tbody tr:hover td { background: var(--bg3); color: var(--text); }
+
+/* ── Badges ── */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-family: var(--mono); font-weight: 500; }
+.b-green { background: rgba(62,207,142,.12); color: var(--green); border: 1px solid rgba(62,207,142,.25); }
+.b-amber { background: rgba(245,166,35,.12); color: var(--amber); border: 1px solid rgba(245,166,35,.25); }
+.b-red { background: rgba(232,79,79,.12); color: var(--accent); border: 1px solid rgba(232,79,79,.25); }
+.b-blue { background: rgba(79,157,232,.12); color: var(--blue); border: 1px solid rgba(79,157,232,.25); }
+.b-purple { background: rgba(155,115,248,.12); color: var(--purple); border: 1px solid rgba(155,115,248,.25); }
+
+.action-btn { background: none; border: none; color: var(--blue); font-size: 11px; cursor: pointer; font-family: var(--font); padding: 0; }
+.action-btn:hover { text-decoration: underline; }
+
+/* ── Risk bar ── */
+.rbar-wrap { background: var(--bg3); border-radius: 3px; height: 5px; overflow: hidden; }
+.rbar { height: 100%; border-radius: 3px; }
+
+/* ── Reason bars ── */
+.reason-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.reason-label { font-size: 12px; color: var(--text2); width: 130px; flex-shrink: 0; }
+.reason-bar-wrap { flex: 1; background: var(--bg3); border-radius: 3px; height: 6px; overflow: hidden; }
+.reason-bar { height: 100%; border-radius: 3px; }
+.reason-pct { font-size: 11px; color: var(--text3); font-family: var(--mono); width: 30px; text-align: right; }
+
+/* ── Chat ── */
+.chat-layout { display: grid; grid-template-columns: 1fr 320px; gap: 14px; height: calc(100vh - 120px); }
+.chat-window { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); display: flex; flex-direction: column; overflow: hidden; }
+.chat-bar { padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.agent-ava { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-glow); border: 1.5px solid rgba(232,79,79,.4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.agent-ava svg { width: 15px; height: 15px; fill: var(--accent); }
+.agent-name { font-size: 13px; font-weight: 500; }
+.agent-status { font-size: 11px; color: var(--green); }
+.msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 13px; }
+.msgs::-webkit-scrollbar { width: 3px; }
+.msgs::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.msg { display: flex; gap: 8px; animation: fadeIn .25s ease; }
+.msg.user { align-self: flex-end; flex-direction: row-reverse; max-width: 80%; }
+.msg.agent { max-width: 85%; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)} }
+.bubble { padding: 10px 13px; border-radius: 13px; font-size: 13px; line-height: 1.55; white-space: pre-line; }
+.agent .bubble { background: var(--bg3); color: var(--text); border-bottom-left-radius: 3px; }
+.user .bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 3px; }
+.msg-ava { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; align-self: flex-end; }
+.agent .msg-ava { background: var(--bg4); color: var(--accent); border: 1px solid rgba(232,79,79,.2); }
+.user .msg-ava { background: rgba(255,255,255,.15); color: #fff; }
+.msg-time { font-size: 10px; color: var(--text3); margin-top: 3px; }
+.agent .msg-time { text-align: left; }
+.user .msg-time { text-align: right; }
+.typing { display: flex; align-items: center; gap: 5px; padding: 10px 13px; background: var(--bg3); border-radius: 13px; border-bottom-left-radius: 3px; width: fit-content; }
+.td { width: 5px; height: 5px; border-radius: 50%; background: var(--text3); animation: tdBlink 1.1s infinite; }
+.td:nth-child(2){animation-delay:.15s}.td:nth-child(3){animation-delay:.3s}
+@keyframes tdBlink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.chat-input-row { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; gap: 9px; align-items: flex-end; }
+.chat-ta { flex: 1; background: var(--bg3); border: 1px solid var(--border2); border-radius: 9px; padding: 9px 13px; color: var(--text); font-size: 13px; font-family: var(--font); outline: none; resize: none; min-height: 38px; max-height: 90px; line-height: 1.4; }
+.chat-ta::placeholder { color: var(--text3); }
+.chat-ta:focus { border-color: rgba(232,79,79,.5); }
+.send-btn { width: 36px; height: 36px; border-radius: 9px; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .13s; }
+.send-btn:hover { background: #c44; }
+.send-btn svg { width: 15px; height: 15px; fill: #fff; }
+
+/* ── Risk sidebar ── */
+.risk-sidebar { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.risk-sidebar::-webkit-scrollbar { width: 3px; }
+.rpanel { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 15px; }
+.rpanel-label { font-size: 10px; color: var(--text3); font-family: var(--mono); letter-spacing: .7px; text-transform: uppercase; margin-bottom: 10px; }
+.score-big { font-size: 46px; font-weight: 600; font-family: var(--mono); line-height: 1; }
+.score-big.low { color: var(--green); }
+.score-big.medium { color: var(--amber); }
+.score-big.high { color: var(--accent); }
+.score-label { font-size: 12px; color: var(--text3); margin-top: 4px; }
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+.sig-list { display: flex; flex-direction: column; gap: 7px; }
+.sig-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
+.sig-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.sig-dot.red{background:var(--accent)}.sig-dot.amber{background:var(--amber)}.sig-dot.green{background:var(--green)}.sig-dot.gray{background:var(--bg4);border:1px solid var(--border2);}
+.res-list { display: flex; flex-direction: column; gap: 6px; }
+.res-item { padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all .13s; }
+.res-item:hover { border-color: var(--border2); background: var(--bg4); }
+.res-item.rec { border-color: rgba(232,79,79,.25); background: var(--accent-glow); }
+.res-name { font-size: 12px; color: var(--text); }
+.res-hint { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.res-arr { color: var(--text3); font-size: 14px; }
+.demo-btn { display: block; width: 100%; text-align: left; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: 12px; color: var(--text2); font-family: var(--font); cursor: pointer; transition: all .13s; margin-bottom: 6px; }
+.demo-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+
+/* ── Policy ── */
+.policy-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.p-name { font-size: 13px; font-weight: 500; }
+.p-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.toggle { width: 36px; height: 20px; border-radius: 10px; cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+.toggle.on { background: var(--green); }
+.toggle.off { background: var(--bg4); border: 1px solid var(--border2); }
+.toggle-thumb { position: absolute; top: 3px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: left .18s; }
+.toggle.on .toggle-thumb { left: 19px; }
+.toggle.off .toggle-thumb { left: 3px; }
+
+/* ── Misc ── */
+.chip { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: var(--bg3); color: var(--text2); border: 1px solid var(--border); margin-right: 5px; margin-bottom: 12px; cursor: pointer; }
+.chip:hover { border-color: var(--border2); color: var(--text); }
+.num-big { font-size: 30px; font-weight: 600; font-family: var(--mono); line-height: 1; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-row">
+        <div class="logo-shield">
+          <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/></svg>
+        </div>
+        <div>
+          <div class="logo-name">ReturnShield</div>
+          <div class="logo-tag">MERCHANT CONSOLE</div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-group-label">Analytics</div>
+      <div class="nav-item active" data-panel="overview">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </div>
+      <div class="nav-item" data-panel="returns">
+        <svg viewBox="0 0 24 24"><path d="M3 12h18M3 12l4-4M3 12l4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Return Analytics
+      </div>
+      <div class="nav-group-label">Operations</div>
+      <div class="nav-item" data-panel="tickets">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 11h16M4 16h10" stroke-linecap="round"/></svg>
+        Ticket Queue
+        <span class="nav-badge">3</span>
+      </div>
+      <div class="nav-item" data-panel="chat">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linejoin="round"/></svg>
+        Live Chat
+      </div>
+      <div class="nav-group-label">Config</div>
+      <div class="nav-item" data-panel="policy">
+        <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9a9 9 0 110-18c4.97 0 9 4.03 9 9z"/></svg>
+        Policy Manager
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="mer-avatar">SK</div>
+      <div>
+        <div class="mer-name">StyleKart Store</div>
+        <div class="mer-plan">Pro Plan · Active</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1 id="page-title">Overview</h1>
+        <p><span class="status-dot"></span>AI Agent Online &mdash; Last updated just now</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost">Export CSV</button>
+        <button class="btn btn-primary">+ Add Policy</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ─────────── OVERVIEW ─────────── -->
+      <div class="panel active" id="panel-overview">
+        <div class="metrics">
+          <div class="mcard c-blue">
+            <div class="mlabel">Total Chats</div>
+            <div class="mvalue">1,284</div>
+            <div class="mdelta up">↑ 12% this week</div>
+          </div>
+          <div class="mcard c-green">
+            <div class="mlabel">AI Resolved</div>
+            <div class="mvalue">1,091</div>
+            <div class="mdelta up">↑ 85% resolution rate</div>
+          </div>
+          <div class="mcard c-red">
+            <div class="mlabel">Refunds Prevented</div>
+            <div class="mvalue">₹2.4L</div>
+            <div class="mdelta up">↑ 34% vs last month</div>
+          </div>
+          <div class="mcard c-amber">
+            <div class="mlabel">Escalations</div>
+            <div class="mvalue">193</div>
+            <div class="mdelta down">↓ 8% this week</div>
+          </div>
+        </div>
+
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Daily Ticket Volume</span><span class="card-sub">Last 7 days</span></div>
+            <div style="position:relative;height:180px;"><canvas id="chartVolume" role="img" aria-label="Bar chart showing daily ticket volume over the past 7 days">Mon 142, Tue 98, Wed 165, Thu 201, Fri 178, Sat 89, Sun 54.</canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Resolution Breakdown</span><span class="card-sub">This month</span></div>
+            <div style="position:relative;height:140px;"><canvas id="chartResolution" role="img" aria-label="Doughnut chart showing resolution types: Auto-approved 52%, Exchange 21%, Human review 15%, Rejected 12%">Auto-approved 52%, Exchange 21%, Human review 15%, Rejected 12%.</canvas></div>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11px;color:var(--text2);">
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#3ecf8e;margin-right:5px;vertical-align:middle;"></span>Auto-approved 52%</span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#4f9de8;margin-right:5px;vertical-align:middle;"></span>Exchange 21%</span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#9b73f8;margin-right:5px;vertical-align:middle;"></span>Human review 15%</span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e84f4f;margin-right:5px;vertical-align:middle;"></span>Rejected 12%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="g3">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Avg Response Time</span></div>
+            <div class="num-big" style="color:var(--green);">1.3s</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">vs 4.2 min human avg</div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Exchange Conversion</span></div>
+            <div class="num-big" style="color:var(--blue);">38%</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">Up from 22% last month</div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">CSAT Score</span></div>
+            <div class="num-big" style="color:var(--amber);">4.6<span style="font-size:16px;color:var(--text3)">/5</span></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">Based on 412 ratings</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── RETURN ANALYTICS ─────────── -->
+      <div class="panel" id="panel-returns">
+        <div class="metrics">
+          <div class="mcard c-red">
+            <div class="mlabel">Total Returns</div>
+            <div class="mvalue">347</div>
+            <div class="mdelta down">↓ 11% vs last month</div>
+          </div>
+          <div class="mcard c-amber">
+            <div class="mlabel">High-Risk Flagged</div>
+            <div class="mvalue">42</div>
+            <div class="mdelta">12.1% of returns</div>
+          </div>
+          <div class="mcard c-green">
+            <div class="mlabel">Refund Value Saved</div>
+            <div class="mvalue">₹1.8L</div>
+            <div class="mdelta up">↑ 28% this quarter</div>
+          </div>
+          <div class="mcard c-blue">
+            <div class="mlabel">Exchanges Made</div>
+            <div class="mvalue">132</div>
+            <div class="mdelta up">38% of return cases</div>
+          </div>
+        </div>
+
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Return Reasons</span><span class="card-sub">All categories</span></div>
+            <div style="margin-top:4px;">
+              <div class="reason-row"><span class="reason-label">Size / fit issue</span><div class="reason-bar-wrap"><div class="reason-bar" style="width:68%;background:var(--blue);"></div></div><span class="reason-pct">68%</span></div>
+              <div class="reason-row"><span class="reason-label">Damaged item</span><div class="reason-bar-wrap"><div class="reason-bar" style="width:45%;background:var(--accent);"></div></div><span class="reason-pct">45%</span></div>
+              <div class="reason-row"><span class="reason-label">Wrong product</span><div class="reason-bar-wrap"><div class="reason-bar" style="width:30%;background:var(--amber);"></div></div><span class="reason-pct">30%</span></div>
+              <div class="reason-row"><span class="reason-label">Not as described</span><div class="reason-bar-wrap"><div class="reason-bar" style="width:22%;background:var(--purple);"></div></div><span class="reason-pct">22%</span></div>
+              <div class="reason-row"><span class="reason-label">Changed mind</span><div class="reason-bar-wrap"><div class="reason-bar" style="width:14%;background:var(--green);"></div></div><span class="reason-pct">14%</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Most Returned Products</span></div>
+            <table>
+              <thead><tr><th>Product</th><th>Returns</th><th>Rate</th></tr></thead>
+              <tbody>
+                <tr><td>Urban Runner Shoes</td><td>48</td><td><span class="badge b-red">14.2%</span></td></tr>
+                <tr><td>Comfort Joggers</td><td>35</td><td><span class="badge b-amber">9.8%</span></td></tr>
+                <tr><td>Canvas Backpack</td><td>29</td><td><span class="badge b-amber">8.3%</span></td></tr>
+                <tr><td>Formal Blazer</td><td>24</td><td><span class="badge b-green">6.1%</span></td></tr>
+                <tr><td>Summer Dress</td><td>19</td><td><span class="badge b-green">4.7%</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="card-title">High-Risk Customers</span><span class="card-sub">Sorted by risk score</span></div>
+          <table>
+            <thead><tr><th>Customer</th><th>Returns (60d)</th><th>Damage Claims</th><th>Risk Score</th><th>Level</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Aarav Sharma</td><td>4</td><td>2</td>
+                <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--mono);font-size:11px;color:var(--text);">75</span><div class="rbar-wrap" style="width:80px;"><div class="rbar" style="width:75%;background:var(--accent);"></div></div></div></td>
+                <td><span class="badge b-red">High</span></td><td><button class="action-btn">Review</button></td>
+              </tr>
+              <tr>
+                <td>Priya Nair</td><td>3</td><td>1</td>
+                <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--mono);font-size:11px;color:var(--text);">52</span><div class="rbar-wrap" style="width:80px;"><div class="rbar" style="width:52%;background:var(--amber);"></div></div></div></td>
+                <td><span class="badge b-amber">Medium</span></td><td><button class="action-btn">Review</button></td>
+              </tr>
+              <tr>
+                <td>Ravi Menon</td><td>2</td><td>2</td>
+                <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--mono);font-size:11px;color:var(--text);">48</span><div class="rbar-wrap" style="width:80px;"><div class="rbar" style="width:48%;background:var(--amber);"></div></div></div></td>
+                <td><span class="badge b-amber">Medium</span></td><td><button class="action-btn">Review</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─────────── TICKET QUEUE ─────────── -->
+      <div class="panel" id="panel-tickets">
+        <div style="margin-bottom:6px;">
+          <span class="chip">All (12)</span>
+          <span class="chip">High Risk (3)</span>
+          <span class="chip">Pending (5)</span>
+          <span class="chip">Resolved (4)</span>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Ticket ID</th><th>Customer</th><th>Issue</th><th>Order</th><th>Risk</th><th>Suggested Action</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-family:var(--mono);color:var(--text);">T-101</td>
+                <td>Meera K.</td><td>Size issue</td><td>ORD-1040</td>
+                <td><span class="badge b-green">Low</span></td>
+                <td><span class="badge b-blue">Exchange</span></td>
+                <td><button class="action-btn">Open ›</button></td>
+              </tr>
+              <tr>
+                <td style="font-family:var(--mono);color:var(--text);">T-102</td>
+                <td>Kiran S.</td><td>Damaged item</td><td>ORD-1041</td>
+                <td><span class="badge b-amber">Medium</span></td>
+                <td><span class="badge b-amber">Ask for proof</span></td>
+                <td><button class="action-btn">Open ›</button></td>
+              </tr>
+              <tr style="background:rgba(232,79,79,.03);">
+                <td style="font-family:var(--mono);color:var(--accent);">T-103</td>
+                <td>Aarav S.</td><td>Repeated refunds</td><td>ORD-1045</td>
+                <td><span class="badge b-red">High</span></td>
+                <td><span class="badge b-red">Human review</span></td>
+                <td><button class="action-btn">Open ›</button></td>
+              </tr>
+              <tr>
+                <td style="font-family:var(--mono);color:var(--text);">T-104</td>
+                <td>Diya R.</td><td>Wrong item</td><td>ORD-1047</td>
+                <td><span class="badge b-green">Low</span></td>
+                <td><span class="badge b-blue">Replacement</span></td>
+                <td><button class="action-btn">Open ›</button></td>
+              </tr>
+              <tr>
+                <td style="font-family:var(--mono);color:var(--text);">T-105</td>
+                <td>Ankit M.</td><td>Refund request</td><td>ORD-1050</td>
+                <td><span class="badge b-amber">Medium</span></td>
+                <td><span class="badge b-purple">Store credit</span></td>
+                <td><button class="action-btn">Open ›</button></td>
+              </tr>
+              <tr>
+                <td style="font-family:var(--mono);color:var(--text);">T-106</td>
+                <td>Sneha P.</td><td>Order not received</td><td>ORD-1053</td>
+                <td><span class="badge b-green">Low</span></td>
+                <td><span class="badge b-blue">Track &amp; update</span></td>
+                <td><button class="action-btn">Open ›</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─────────── LIVE CHAT ─────────── -->
+      <div class="panel" id="panel-chat">
+        <div class="chat-layout">
+          <div class="chat-window">
+            <div class="chat-bar">
+              <div class="agent-ava">
+                <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/></svg>
+              </div>
+              <div>
+                <div class="agent-name">ReturnShield AI Agent</div>
+                <div class="agent-status">● Online — responding instantly</div>
+              </div>
+            </div>
+            <div class="msgs" id="msgs">
+              <div class="msg agent">
+                <div class="msg-ava">RS</div>
+                <div>
+                  <div class="bubble">Hi! I'm your ReturnShield support agent. I can help with orders, returns, refunds, and product questions. What can I help you with today?</div>
+                  <div class="msg-time">Just now</div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-row">
+              <textarea class="chat-ta" id="chatInput" placeholder="Type a message…" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+              <button class="send-btn" onclick="sendMsg()">
+                <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Risk sidebar -->
+          <div class="risk-sidebar">
+            <div class="rpanel">
+              <div class="rpanel-label">Live Risk Score</div>
+              <div class="score-big" id="rScore">—</div>
+              <div class="score-label" id="rLabel">Awaiting return request…</div>
+              <div class="divider"></div>
+              <div class="rpanel-label">Risk Signals</div>
+              <div class="sig-list" id="sigList">
+                <div class="sig-row"><div class="sig-dot gray"></div><span style="color:var(--text3);">No active signals</span></div>
+              </div>
+            </div>
+
+            <div class="rpanel">
+              <div class="rpanel-label">Suggested Resolution</div>
+              <div class="res-list" id="resList">
+                <div style="font-size:12px;color:var(--text3);">Process a return request to see options.</div>
+              </div>
+            </div>
+
+            <div class="rpanel">
+              <div class="rpanel-label">Demo Scenarios</div>
+              <button class="demo-btn" onclick="runScenario('low')">Low risk — size exchange</button>
+              <button class="demo-btn" onclick="runScenario('high')">High risk — repeat refund abuse</button>
+              <button class="demo-btn" onclick="runScenario('track')">Order tracking query</button>
+              <button class="demo-btn" onclick="runScenario('policy')">Policy question (sale item)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── POLICY MANAGER ─────────── -->
+      <div class="panel" id="panel-policy">
+        <div class="g2">
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-head"><span class="card-title">Active Policies</span><span class="card-sub">Toggle to enable / disable</span></div>
+              <div>
+                <div class="policy-item">
+                  <div><div class="p-name">Return Policy</div><div class="p-meta">7-day window · Most categories</div></div>
+                  <div class="toggle on" onclick="togglePolicy(this)"><div class="toggle-thumb"></div></div>
+                </div>
+                <div class="policy-item">
+                  <div><div class="p-name">Refund Policy</div><div class="p-meta">Full refund on eligible items</div></div>
+                  <div class="toggle on" onclick="togglePolicy(this)"><div class="toggle-thumb"></div></div>
+                </div>
+                <div class="policy-item">
+                  <div><div class="p-name">Warranty Policy</div><div class="p-meta">6 months on electronics</div></div>
+                  <div class="toggle on" onclick="togglePolicy(this)"><div class="toggle-thumb"></div></div>
+                </div>
+                <div class="policy-item">
+                  <div><div class="p-name">Sale Item Policy</div><div class="p-meta">No refund unless damaged / wrong item</div></div>
+                  <div class="toggle on" onclick="togglePolicy(this)"><div class="toggle-thumb"></div></div>
+                </div>
+                <div class="policy-item">
+                  <div><div class="p-name">International Shipping</div><div class="p-meta">Duty charges not covered by store</div></div>
+                  <div class="toggle off" onclick="togglePolicy(this)"><div class="toggle-thumb"></div></div>
+                </div>
+                <div class="policy-item">
+                  <div><div class="p-name">Exchange Only Mode</div><div class="p-meta">Replace refunds with exchanges</div></div>
+                  <div class="toggle off" onclick="togglePolicy(this)"><div class="toggle-thumb"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-head"><span class="card-title">Category Rules</span></div>
+              <table>
+                <thead><tr><th>Category</th><th>Returnable</th><th>Window</th><th>Condition</th></tr></thead>
+                <tbody>
+                  <tr><td>Footwear</td><td><span class="badge b-green">Yes</span></td><td>7 days</td><td>Unworn</td></tr>
+                  <tr><td>Apparel</td><td><span class="badge b-green">Yes</span></td><td>14 days</td><td>Tags intact</td></tr>
+                  <tr><td>Electronics</td><td><span class="badge b-amber">Partial</span></td><td>3 days</td><td>Sealed box</td></tr>
+                  <tr><td>Innerwear</td><td><span class="badge b-red">No</span></td><td>—</td><td>Hygiene</td></tr>
+                  <tr><td>Accessories</td><td><span class="badge b-green">Yes</span></td><td>7 days</td><td>Unused</td></tr>
+                  <tr><td>Sale Items</td><td><span class="badge b-amber">Partial</span></td><td>7 days</td><td>Damaged only</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-head"><span class="card-title">Risk Score Thresholds</span></div>
+              <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:12px;color:var(--text2);">Low — Auto-approve</span><span style="font-family:var(--mono);font-size:11px;color:var(--green);">0 – 30</span></div>
+                  <div class="rbar-wrap"><div class="rbar" style="width:30%;background:var(--green);"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:12px;color:var(--text2);">Medium — Request evidence</span><span style="font-family:var(--mono);font-size:11px;color:var(--amber);">31 – 60</span></div>
+                  <div class="rbar-wrap"><div class="rbar" style="width:60%;background:var(--amber);"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:12px;color:var(--text2);">High — Human review</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent);">61+</span></div>
+                  <div class="rbar-wrap"><div class="rbar" style="width:100%;background:var(--accent);"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<script>
+// ── Nav ──────────────────────────────────────────────
+const panelTitles = { overview:'Overview', returns:'Return Analytics', tickets:'Ticket Queue', chat:'Live Chat', policy:'Policy Manager' };
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const id = item.dataset.panel;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    document.getElementById('page-title').textContent = panelTitles[id] || id;
+  });
+});
+
+// ── Charts ───────────────────────────────────────────
+const vCtx = document.getElementById('chartVolume');
+new Chart(vCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    datasets: [{ label:'Tickets', data:[142,98,165,201,178,89,54],
+      backgroundColor:'rgba(79,157,232,0.65)', borderRadius:5, borderSkipped:false }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.05)' }, ticks:{ color:'#5e6270', font:{ family:"'Space Mono'", size:10 } } },
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }, ticks:{ color:'#5e6270', font:{ family:"'Space Mono'", size:10 } } }
+    }
+  }
+});
+
+const rCtx = document.getElementById('chartResolution');
+new Chart(rCtx, {
+  type:'doughnut',
+  data:{
+    labels:['Auto-approved','Exchange','Human review','Rejected'],
+    datasets:[{ data:[52,21,15,12],
+      backgroundColor:['#3ecf8e','#4f9de8','#9b73f8','#e84f4f'],
+      borderWidth:0, hoverOffset:4 }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false, cutout:'65%',
+    plugins:{ legend:{ display:false } }
+  }
+});
+
+// ── Policy toggles ───────────────────────────────────
+function togglePolicy(el) {
+  el.classList.toggle('on');
+  el.classList.toggle('off');
+}
+
+// ── Chat ─────────────────────────────────────────────
+const msgsEl = document.getElementById('msgs');
+const inputEl = document.getElementById('chatInput');
+
+function addMsg(role, text) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + role;
+  el.innerHTML = `<div class="msg-ava">${role==='agent'?'RS':'ME'}</div><div><div class="bubble">${text.replace(/\n/g,'<br>')}</div><div class="msg-time">Just now</div></div>`;
+  msgsEl.appendChild(el);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+let typingEl = null;
+function showTyping() {
+  typingEl = document.createElement('div');
+  typingEl.className = 'msg agent';
+  typingEl.innerHTML = `<div class="msg-ava">RS</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>`;
+  msgsEl.appendChild(typingEl);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+function hideTyping() { if (typingEl) { typingEl.remove(); typingEl = null; } }
+
+function updateRisk({score, level, label, signals, resolutions}) {
+  const el = document.getElementById('rScore');
+  el.textContent = score !== null ? score : '—';
+  el.className = 'score-big ' + (level || '');
+  document.getElementById('rLabel').textContent = label;
+  document.getElementById('sigList').innerHTML = signals.map(s =>
+    `<div class="sig-row"><div class="sig-dot ${s.dot}"></div><span>${s.text}</span></div>`
+  ).join('');
+  const resList = document.getElementById('resList');
+  if (resolutions.length) {
+    resList.innerHTML = resolutions.map(r =>
+      `<div class="res-item ${r.rec ? 'rec':''}">
+        <div><div class="res-name">${r.name}</div><div class="res-hint">${r.hint}</div></div>
+        <span class="res-arr">›</span>
+      </div>`).join('');
+  } else {
+    resList.innerHTML = '<div style="font-size:12px;color:var(--text3);">No return action needed.</div>';
+  }
+}
+
+const scenarios = {
+  low: {
+    msgs: [
+      {r:'user', t:'I ordered a pair of joggers but they\'re too small. My order number is ORD-1040.'},
+      {r:'agent', t:'Found your order ORD-1040 — Comfort Joggers, delivered 4 days ago. You\'re well within the 14-day return window.\n\nSince this is a size issue, I\'d recommend an exchange for the right size. We have M, L, and XL in stock right now.\n\nWould you like me to set up an exchange, or would you prefer store credit?'},
+    ],
+    risk: { score:12, level:'low', label:'Low Risk · Auto-approve', signals:[
+      {dot:'green', text:'First-time return request'},
+      {dot:'green', text:'Within return window (4 of 14 days)'},
+      {dot:'green', text:'Valid order verified'},
+    ], resolutions:[
+      {name:'Exchange for correct size', hint:'Recommended · Instant approval', rec:true},
+      {name:'Store credit (₹1,199)', hint:'Alternative option'},
+    ]}
+  },
+  high: {
+    msgs: [
+      {r:'user', t:'I want a refund. The shoes I received with order ORD-1045 arrived damaged.'},
+      {r:'agent', t:'I\'m looking into your order ORD-1045 — Urban Runner Shoes, ₹5,499, delivered 6 days ago. The return window is still open.\n\nHowever, I\'ve noticed this account has had 4 returns in the last 45 days and 2 previous damage-related claims. To process this request, I\'ll need a clear photo or video of the damage.\n\nOnce verified, I can arrange a replacement, store credit, or escalate to a support specialist.'},
+    ],
+    risk: { score:75, level:'high', label:'High Risk · Human review required', signals:[
+      {dot:'red', text:'4 returns in 45 days (+20)'},
+      {dot:'red', text:'2 prior damage claims (+20)'},
+      {dot:'amber', text:'High-value item ₹5,499 (+20)'},
+      {dot:'amber', text:'No photo proof submitted (+15)'},
+    ], resolutions:[
+      {name:'Request photo / video proof', hint:'Required before any action', rec:true},
+      {name:'Escalate to human agent', hint:'Recommended for high-risk cases'},
+      {name:'Reject request', hint:'If abuse is confirmed'},
+    ]}
+  },
+  track: {
+    msgs: [
+      {r:'user', t:'Where is my order ORD-1042? It\'s been a few days.'},
+      {r:'agent', t:'Your order ORD-1042 has been shipped and is currently out for delivery with Blue Dart.\n\nExpected delivery: Today by 8 PM\nTracking ID: BD-48291-IND\n\nIs there anything else I can help with?'},
+    ],
+    risk: { score:null, level:'', label:'Order query · No return risk', signals:[
+      {dot:'green', text:'Valid order verified'},
+      {dot:'green', text:'No return request detected'},
+    ], resolutions:[] }
+  },
+  policy: {
+    msgs: [
+      {r:'user', t:'Can I return a sale item I bought last week?'},
+      {r:'agent', t:'According to the store\'s Sale Item Policy, sale items are generally not eligible for refunds.\n\nHowever, there are two exceptions:\n• If the item arrived damaged\n• If the wrong item was delivered\n\nIf either applies to you, I can process your request. Could you share your order number so I can check the details?'},
+    ],
+    risk: { score:null, level:'', label:'Policy query · No risk yet', signals:[
+      {dot:'gray', text:'No order verified yet'},
+    ], resolutions:[] }
+  }
+};
+
+function runScenario(key) {
+  msgsEl.innerHTML = '';
+  addMsg('agent', 'Hi! I\'m your ReturnShield support agent. I can help with orders, returns, and product questions. What can I help you with today?');
+  const {msgs, risk} = scenarios[key];
+  let i = 0;
+  function next() {
+    if (i >= msgs.length) { updateRisk(risk); return; }
+    const m = msgs[i++];
+    setTimeout(() => {
+      if (m.r === 'user') { addMsg('user', m.t); next(); }
+      else { showTyping(); setTimeout(() => { hideTyping(); addMsg('agent', m.t); next(); }, 1400); }
+    }, i === 1 ? 400 : 600);
+  }
+  setTimeout(next, 200);
+}
+
+function sendMsg() {
+  const v = inputEl.value.trim();
+  if (!v) return;
+  addMsg('user', v);
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    addMsg('agent', 'Thanks for reaching out. To help you further, could you please share your order number and the registered email address on your account?');
+  }, 1400);
+}
+
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 90) + 'px'; }
+</script>
+</body>
+</html>

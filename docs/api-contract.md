@@ -21,6 +21,59 @@ Response:
 }
 ```
 
+## AI Chat
+
+Uses Groq to classify customer intent, extract order details, call ReturnShield tools, and write the customer-facing reply.
+
+```http
+POST /api/chat
+```
+
+Request:
+
+```json
+{
+  "message": "I want a refund. The shoes arrived damaged. ORD-1045, aarav@example.com",
+  "history": []
+}
+```
+
+Response:
+
+```json
+{
+  "message": "I can help with this. Since the item is within the return window, your request is eligible for review. Because this account has multiple recent damage-related refund claims, I need a photo of the damaged product before approving a refund.",
+  "intent": "refund_request",
+  "extraction": {
+    "intent": "refund_request",
+    "orderId": "ORD-1045",
+    "customerEmail": "aarav@example.com",
+    "reason": "damaged_item",
+    "photoProofProvided": false,
+    "needsMoreInfo": false
+  },
+  "returnDecision": {
+    "eligible": true,
+    "returnWindowDays": 7,
+    "daysSinceDelivery": 6,
+    "reason": "damaged_item",
+    "riskScore": 75,
+    "riskLevel": "High",
+    "riskReasons": [
+      "Customer has 4 returns in the last 60 days",
+      "Item value is above INR 5000",
+      "Damage claim has no photo proof",
+      "Customer has repeated damaged-item claims"
+    ],
+    "recommendedAction": "Request photo proof and escalate if unclear",
+    "customerMessage": "I can help with this. Since the item is within the return window, your request is eligible for review. Because this account has multiple recent damage-related refund claims, I need a photo of the damaged product before approving a refund. Once uploaded, I can offer a replacement, store credit, or escalate this to our support team.",
+    "ticketId": "T-104"
+  },
+  "aiProvider": "groq",
+  "aiModel": "llama-3.1-8b-instant"
+}
+```
+
 ## Get Product
 
 ```http

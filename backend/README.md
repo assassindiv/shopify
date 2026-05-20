@@ -17,6 +17,28 @@ API docs:
 http://localhost:8000/docs
 ```
 
+## AI Setup
+
+The chat endpoint uses Groq's OpenAI-compatible chat API.
+
+Create `backend/.env`:
+
+```text
+GROQ_API_KEY=your_groq_api_key
+```
+
+Optional model override:
+
+```text
+GROQ_MODEL=llama-3.1-8b-instant
+```
+
+Then start the API:
+
+```bash
+uvicorn app.main:app --reload
+```
+
 ## Planned Modules
 
 - `app/api`: HTTP route handlers
@@ -37,5 +59,18 @@ POST /api/returns/check
   "customerEmail": "aarav@example.com",
   "reason": "damaged_item",
   "photoProofProvided": false
+}
+```
+
+## AI Chat Request
+
+```http
+POST /api/chat
+```
+
+```json
+{
+  "message": "I want a refund. The shoes arrived damaged. ORD-1045, aarav@example.com",
+  "history": []
 }
 ```

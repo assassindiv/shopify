@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health, orders, products, returns, risk, tickets
+from app.api import chat, health, orders, products, returns, risk, tickets
 from app.core.config import API_PREFIX, APP_NAME
 from app.core.errors import AppError, app_error_handler
 
@@ -10,7 +10,8 @@ app = FastAPI(title="ReturnShield API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "null"],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,6 +20,7 @@ app.add_middleware(
 app.add_exception_handler(AppError, app_error_handler)
 
 app.include_router(health.router, prefix=API_PREFIX)
+app.include_router(chat.router, prefix=API_PREFIX)
 app.include_router(products.router, prefix=API_PREFIX)
 app.include_router(orders.router, prefix=API_PREFIX)
 app.include_router(risk.router, prefix=API_PREFIX)

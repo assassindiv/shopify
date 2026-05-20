@@ -206,6 +206,30 @@ Response:
 ]
 ```
 
+## Dashboard Overview
+
+```http
+GET /api/dashboard/overview
+```
+
+Response:
+
+```json
+{
+  "metrics": {
+    "totalChats": 1286,
+    "aiResolved": 1092,
+    "refundsPrevented": 247500,
+    "exchangesSuggested": 133,
+    "humanEscalations": 1,
+    "averageResponseTime": "3.2s",
+    "totalReturns": 349,
+    "highRiskFlagged": 1,
+    "refundValueSaved": 187500
+  }
+}
+```
+
 ## Create Ticket
 
 ```http

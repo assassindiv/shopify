@@ -267,22 +267,22 @@ tbody tr:hover td { background: var(--bg3); color: var(--text); }
         <div class="metrics">
           <div class="mcard c-blue">
             <div class="mlabel">Total Chats</div>
-            <div class="mvalue">1,284</div>
+            <div class="mvalue" id="metricTotalChats">1,284</div>
             <div class="mdelta up">↑ 12% this week</div>
           </div>
           <div class="mcard c-green">
             <div class="mlabel">AI Resolved</div>
-            <div class="mvalue">1,091</div>
+            <div class="mvalue" id="metricAiResolved">1,091</div>
             <div class="mdelta up">↑ 85% resolution rate</div>
           </div>
           <div class="mcard c-red">
             <div class="mlabel">Refunds Prevented</div>
-            <div class="mvalue">₹2.4L</div>
+            <div class="mvalue" id="metricRefundsPrevented">₹2.4L</div>
             <div class="mdelta up">↑ 34% vs last month</div>
           </div>
           <div class="mcard c-amber">
             <div class="mlabel">Escalations</div>
-            <div class="mvalue">193</div>
+            <div class="mvalue" id="metricEscalations">193</div>
             <div class="mdelta down">↓ 8% this week</div>
           </div>
         </div>
@@ -328,22 +328,22 @@ tbody tr:hover td { background: var(--bg3); color: var(--text); }
         <div class="metrics">
           <div class="mcard c-red">
             <div class="mlabel">Total Returns</div>
-            <div class="mvalue">347</div>
+            <div class="mvalue" id="metricTotalReturns">347</div>
             <div class="mdelta down">↓ 11% vs last month</div>
           </div>
           <div class="mcard c-amber">
             <div class="mlabel">High-Risk Flagged</div>
-            <div class="mvalue">42</div>
+            <div class="mvalue" id="metricHighRisk">42</div>
             <div class="mdelta">12.1% of returns</div>
           </div>
           <div class="mcard c-green">
             <div class="mlabel">Refund Value Saved</div>
-            <div class="mvalue">₹1.8L</div>
+            <div class="mvalue" id="metricRefundValueSaved">₹1.8L</div>
             <div class="mdelta up">↑ 28% this quarter</div>
           </div>
           <div class="mcard c-blue">
             <div class="mlabel">Exchanges Made</div>
-            <div class="mvalue">132</div>
+            <div class="mvalue" id="metricExchanges">132</div>
             <div class="mdelta up">38% of return cases</div>
           </div>
         </div>
@@ -402,15 +402,15 @@ tbody tr:hover td { background: var(--bg3); color: var(--text); }
       <!-- ─────────── TICKET QUEUE ─────────── -->
       <div class="panel" id="panel-tickets">
         <div style="margin-bottom:6px;">
-          <span class="chip">All (12)</span>
-          <span class="chip">High Risk (3)</span>
-          <span class="chip">Pending (5)</span>
-          <span class="chip">Resolved (4)</span>
+          <span class="chip" id="chipAll">All (12)</span>
+          <span class="chip" id="chipHighRisk">High Risk (3)</span>
+          <span class="chip" id="chipPending">Pending (5)</span>
+          <span class="chip" id="chipResolved">Resolved (4)</span>
         </div>
         <div class="card">
           <table>
             <thead><tr><th>Ticket ID</th><th>Customer</th><th>Issue</th><th>Order</th><th>Risk</th><th>Suggested Action</th><th></th></tr></thead>
-            <tbody>
+            <tbody id="ticketBody">
               <tr>
                 <td style="font-family:var(--mono);color:var(--text);">T-101</td>
                 <td>Meera K.</td><td>Size issue</td><td>ORD-1040</td>
@@ -596,6 +596,91 @@ tbody tr:hover td { background: var(--bg3); color: var(--text); }
 <script>
 // ── Nav ──────────────────────────────────────────────
 const panelTitles = { overview:'Overview', returns:'Return Analytics', tickets:'Ticket Queue', chat:'Live Chat', policy:'Policy Manager' };
+const API_BASE = 'http://localhost:8000/api';
+
+function moneyCompact(value) {
+  if (value >= 100000) return '₹' + (value / 100000).toFixed(1) + 'L';
+  return '₹' + value.toLocaleString('en-IN');
+}
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function riskBadge(level) {
+  const cls = level === 'High' ? 'b-red' : level === 'Medium' ? 'b-amber' : 'b-green';
+  return `<span class="badge ${cls}">${escapeHtml(level)}</span>`;
+}
+
+function actionBadge(action) {
+  const lower = action.toLowerCase();
+  const cls = lower.includes('escalate') || lower.includes('human')
+    ? 'b-red'
+    : lower.includes('evidence') || lower.includes('proof')
+      ? 'b-amber'
+      : lower.includes('exchange') || lower.includes('replacement')
+        ? 'b-blue'
+        : 'b-purple';
+  return `<span class="badge ${cls}">${escapeHtml(action)}</span>`;
+}
+
+async function loadDashboardData() {
+  try {
+    const [overviewRes, ticketsRes] = await Promise.all([
+      fetch(`${API_BASE}/dashboard/overview`),
+      fetch(`${API_BASE}/tickets`),
+    ]);
+
+    if (!overviewRes.ok || !ticketsRes.ok) throw new Error('Dashboard API failed');
+
+    const overview = await overviewRes.json();
+    const tickets = await ticketsRes.json();
+    const metrics = overview.metrics;
+
+    setText('metricTotalChats', metrics.totalChats.toLocaleString('en-IN'));
+    setText('metricAiResolved', metrics.aiResolved.toLocaleString('en-IN'));
+    setText('metricRefundsPrevented', moneyCompact(metrics.refundsPrevented));
+    setText('metricEscalations', metrics.humanEscalations.toLocaleString('en-IN'));
+    setText('metricTotalReturns', metrics.totalReturns.toLocaleString('en-IN'));
+    setText('metricHighRisk', metrics.highRiskFlagged.toLocaleString('en-IN'));
+    setText('metricRefundValueSaved', moneyCompact(metrics.refundValueSaved));
+    setText('metricExchanges', metrics.exchangesSuggested.toLocaleString('en-IN'));
+
+    const highRisk = tickets.filter(ticket => ticket.riskLevel === 'High').length;
+    const pending = tickets.filter(ticket => ticket.status !== 'Resolved').length;
+    const resolved = tickets.filter(ticket => ticket.status === 'Resolved').length;
+    setText('chipAll', `All (${tickets.length})`);
+    setText('chipHighRisk', `High Risk (${highRisk})`);
+    setText('chipPending', `Pending (${pending})`);
+    setText('chipResolved', `Resolved (${resolved})`);
+
+    const ticketBody = document.getElementById('ticketBody');
+    ticketBody.innerHTML = tickets.map(ticket => `
+      <tr ${ticket.riskLevel === 'High' ? 'style="background:rgba(232,79,79,.03);"' : ''}>
+        <td style="font-family:var(--mono);color:${ticket.riskLevel === 'High' ? 'var(--accent)' : 'var(--text)'};">${escapeHtml(ticket.id)}</td>
+        <td>${escapeHtml(ticket.customerName)}</td>
+        <td>${escapeHtml(ticket.issue)}</td>
+        <td>${escapeHtml(ticket.orderId)}</td>
+        <td>${riskBadge(ticket.riskLevel)}</td>
+        <td>${actionBadge(ticket.suggestedAction)}</td>
+        <td><button class="action-btn">Open ›</button></td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    console.warn('Could not load live dashboard data:', error);
+  }
+}
+
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
     const id = item.dataset.panel;
@@ -606,6 +691,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
     document.getElementById('page-title').textContent = panelTitles[id] || id;
   });
 });
+
+loadDashboardData();
+setInterval(loadDashboardData, 8000);
 
 // ── Charts ───────────────────────────────────────────
 const vCtx = document.getElementById('chartVolume');

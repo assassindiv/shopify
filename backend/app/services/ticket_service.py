@@ -1,12 +1,19 @@
 from app.core.errors import AppError
 from app.models.ticket import Ticket, TicketCreate, TicketCreateResponse
-from app.services.data_store import load_json
+from app.services.data_store import load_json, save_json
 from app.services.order_service import get_customer
 
 
 _tickets: list[Ticket] = [
     Ticket.model_validate(ticket) for ticket in load_json("tickets.json")
 ]
+
+
+def _save_tickets() -> None:
+    save_json(
+        "tickets.json",
+        [ticket.model_dump(by_alias=True) for ticket in _tickets],
+    )
 
 
 def list_tickets() -> list[Ticket]:
@@ -36,6 +43,7 @@ def create_ticket(payload: TicketCreate) -> TicketCreateResponse:
         status=status,
     )
     _tickets.append(ticket)
+    _save_tickets()
 
     return TicketCreateResponse(id=ticket.id, status=ticket.status)
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import chat, health, orders, products, returns, risk, tickets
+from app.api import chat, dashboard, health, orders, products, returns, risk, tickets
 from app.core.config import API_PREFIX, APP_NAME
 from app.core.errors import AppError, app_error_handler
 
@@ -21,6 +21,7 @@ app.add_exception_handler(AppError, app_error_handler)
 
 app.include_router(health.router, prefix=API_PREFIX)
 app.include_router(chat.router, prefix=API_PREFIX)
+app.include_router(dashboard.router, prefix=API_PREFIX)
 app.include_router(products.router, prefix=API_PREFIX)
 app.include_router(orders.router, prefix=API_PREFIX)
 app.include_router(risk.router, prefix=API_PREFIX)

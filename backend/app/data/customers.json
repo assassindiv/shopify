@@ -1,0 +1,20 @@
+[
+  {
+    "id": "CUS-501",
+    "name": "Aarav Sharma",
+    "email": "aarav@example.com",
+    "returnsLast60Days": 4,
+    "returnsLast45Days": 4,
+    "previousDamageClaims": 2,
+    "previousRefundClaims": 2
+  },
+  {
+    "id": "CUS-502",
+    "name": "Meera Iyer",
+    "email": "meera@example.com",
+    "returnsLast60Days": 1,
+    "returnsLast45Days": 1,
+    "previousDamageClaims": 0,
+    "previousRefundClaims": 0
+  }
+]

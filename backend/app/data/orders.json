@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ORD-1045",
+    "customerId": "CUS-501",
+    "productId": "PROD-201",
+    "status": "Delivered",
+    "deliveredAt": "2026-05-14",
+    "amount": 5499
+  },
+  {
+    "id": "ORD-1042",
+    "customerId": "CUS-502",
+    "productId": "PROD-202",
+    "status": "Out for delivery",
+    "deliveredAt": null,
+    "amount": 1999
+  }
+]

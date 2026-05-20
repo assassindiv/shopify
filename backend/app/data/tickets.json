@@ -1,0 +1,13 @@
+[
+  {
+    "id": "T-101",
+    "orderId": "ORD-1042",
+    "customerId": "CUS-502",
+    "customerName": "Meera Iyer",
+    "issue": "Size issue",
+    "riskLevel": "Low",
+    "riskScore": 10,
+    "suggestedAction": "Recommend exchange",
+    "status": "Open"
+  }
+]

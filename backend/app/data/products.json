@@ -1,0 +1,22 @@
+[
+  {
+    "id": "PROD-201",
+    "name": "Urban Runner Shoes",
+    "category": "Footwear",
+    "price": 5499,
+    "returnable": true,
+    "returnWindowDays": 7,
+    "stock": 12,
+    "highRiskCategory": false
+  },
+  {
+    "id": "PROD-202",
+    "name": "Everyday Cotton Hoodie",
+    "category": "Apparel",
+    "price": 1999,
+    "returnable": true,
+    "returnWindowDays": 7,
+    "stock": 31,
+    "highRiskCategory": false
+  }
+]

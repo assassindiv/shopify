@@ -179,6 +179,15 @@ tbody tr:hover td { background: var(--bg3); color: var(--text); }
 .demo-btn { display: block; width: 100%; text-align: left; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: 12px; color: var(--text2); font-family: var(--font); cursor: pointer; transition: all .13s; margin-bottom: 6px; }
 .demo-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
 
+.conv-list { display: flex; flex-direction: column; gap: 7px; }
+.conv-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; transition: all .13s; }
+.conv-item:hover, .conv-item.active { background: var(--bg4); border-color: var(--border2); }
+.conv-top { display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px; }
+.conv-id { font-family:var(--mono);font-size:11px;color:var(--text); }
+.conv-meta { font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.conv-preview { font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.conv-empty { font-size:12px;color:var(--text3);line-height:1.5; }
+
 /* ── Policy ── */
 .policy-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .p-name { font-size: 13px; font-weight: 500; }
@@ -491,6 +500,13 @@ tbody tr:hover td { background: var(--bg3); color: var(--text); }
           <!-- Risk sidebar -->
           <div class="risk-sidebar">
             <div class="rpanel">
+              <div class="rpanel-label">Customer Conversations</div>
+              <div class="conv-list" id="conversationList">
+                <div class="conv-empty">No live customer conversations yet.</div>
+              </div>
+            </div>
+
+            <div class="rpanel">
               <div class="rpanel-label">Live Risk Score</div>
               <div class="score-big" id="rScore">—</div>
               <div class="score-label" id="rLabel">Awaiting return request…</div>
@@ -597,6 +613,7 @@ tbody tr:hover td { background: var(--bg3); color: var(--text); }
 // ── Nav ──────────────────────────────────────────────
 const panelTitles = { overview:'Overview', returns:'Return Analytics', tickets:'Ticket Queue', chat:'Live Chat', policy:'Policy Manager' };
 const API_BASE = 'http://localhost:8000/api';
+let selectedConversationId = null;
 
 function moneyCompact(value) {
   if (value >= 100000) return '₹' + (value / 100000).toFixed(1) + 'L';
@@ -672,13 +689,119 @@ async function loadDashboardData() {
         <td>${escapeHtml(ticket.issue)}</td>
         <td>${escapeHtml(ticket.orderId)}</td>
         <td>${riskBadge(ticket.riskLevel)}</td>
-        <td>${actionBadge(ticket.suggestedAction)}</td>
-        <td><button class="action-btn">Open ›</button></td>
+        <td>${actionBadge(ticket.suggestedAction)}<div style="font-size:10px;color:var(--text3);margin-top:4px;">${escapeHtml(ticket.status)}${ticket.evidenceProvided ? ' · Evidence received' : ''}</div></td>
+        <td>
+          <button class="action-btn" onclick="updateTicketStatus('${escapeHtml(ticket.id)}','Approved')">Approve</button>
+          <span style="color:var(--text3);"> · </span>
+          <button class="action-btn" onclick="updateTicketStatus('${escapeHtml(ticket.id)}','Resolved')">Resolve</button>
+        </td>
       </tr>
     `).join('');
   } catch (error) {
     console.warn('Could not load live dashboard data:', error);
   }
+}
+
+async function updateTicketStatus(ticketId, status) {
+  await fetch(`${API_BASE}/tickets/${ticketId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  loadDashboardData();
+}
+
+function renderMerchantConversation(conversation) {
+  selectedConversationId = conversation.id;
+  msgsEl.innerHTML = '';
+  conversation.messages.forEach(message => {
+    addMsg(message.role === 'customer' ? 'user' : 'agent', message.content);
+  });
+
+  updateRisk({
+    score: conversation.riskLevel === 'High' ? 75 : conversation.riskLevel === 'Medium' ? 45 : null,
+    level: conversation.riskLevel ? conversation.riskLevel.toLowerCase() : '',
+    label: conversation.riskLevel
+      ? `${conversation.riskLevel} risk · ${conversation.status}`
+      : `${conversation.intent.replaceAll('_', ' ')} · ${conversation.status}`,
+    signals: [
+      conversation.orderId ? {dot:'green', text:`Order ${conversation.orderId}`} : {dot:'gray', text:'No order captured'},
+      conversation.customerEmail ? {dot:'green', text:conversation.customerEmail} : {dot:'gray', text:'No email captured'},
+      conversation.ticketId ? {dot:'red', text:`Ticket ${conversation.ticketId}`} : {dot:'gray', text:'No ticket created'},
+    ],
+    resolutions: conversation.ticketId ? [
+      {name:'Open support ticket', hint:conversation.ticketId, rec:true},
+      {name:'Continue customer chat', hint:'Use latest customer context'},
+    ] : [
+      {name:'Monitor conversation', hint:'No escalation needed yet', rec:true},
+    ],
+  });
+}
+
+async function loadConversations() {
+  try {
+    const response = await fetch(`${API_BASE}/conversations`);
+    if (!response.ok) throw new Error('Conversation API failed');
+    const conversations = await response.json();
+    const list = document.getElementById('conversationList');
+
+    if (!conversations.length) {
+      list.innerHTML = '<div class="conv-empty">No live customer conversations yet.</div>';
+      return;
+    }
+
+    list.innerHTML = conversations.map((conversation, index) => {
+      const lastMessage = conversation.messages[conversation.messages.length - 1];
+      const badgeClass = conversation.riskLevel === 'High' ? 'b-red' : conversation.riskLevel === 'Medium' ? 'b-amber' : 'b-blue';
+      return `
+        <div class="conv-item ${index === 0 ? 'active' : ''}" data-conversation-id="${conversation.id}">
+          <div class="conv-top">
+            <span class="conv-id">${escapeHtml(conversation.id)}</span>
+            <span class="badge ${badgeClass}">${escapeHtml(conversation.riskLevel || conversation.intent.replaceAll('_', ' '))}</span>
+          </div>
+          <div class="conv-meta">${escapeHtml(conversation.customerEmail || conversation.orderId || 'Guest customer')}</div>
+          <div class="conv-preview">${escapeHtml(lastMessage ? lastMessage.content : 'No messages')}</div>
+        </div>
+      `;
+    }).join('');
+
+    list.querySelectorAll('.conv-item').forEach(item => {
+      item.addEventListener('click', () => {
+        list.querySelectorAll('.conv-item').forEach(node => node.classList.remove('active'));
+        item.classList.add('active');
+        const conversation = conversations.find(entry => entry.id === item.dataset.conversationId);
+        if (conversation) renderMerchantConversation(conversation);
+      });
+    });
+
+    renderMerchantConversation(conversations[0]);
+  } catch (error) {
+    console.warn('Could not load conversations:', error);
+  }
+}
+
+async function sendMerchantReply(text) {
+  if (!selectedConversationId) {
+    addMsg('agent', 'Select a customer conversation before replying.');
+    return;
+  }
+
+  const response = await fetch(`${API_BASE}/conversations/${selectedConversationId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      role: 'merchant',
+      content: text,
+    }),
+  });
+
+  if (!response.ok) {
+    addMsg('agent', 'Could not send merchant reply.');
+    return;
+  }
+
+  const conversation = await response.json();
+  renderMerchantConversation(conversation);
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -693,7 +816,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
 
 loadDashboardData();
+loadConversations();
 setInterval(loadDashboardData, 8000);
+setInterval(loadConversations, 8000);
 
 // ── Charts ───────────────────────────────────────────
 const vCtx = document.getElementById('chartVolume');
@@ -848,14 +973,9 @@ function runScenario(key) {
 function sendMsg() {
   const v = inputEl.value.trim();
   if (!v) return;
-  addMsg('user', v);
   inputEl.value = '';
   inputEl.style.height = 'auto';
-  showTyping();
-  setTimeout(() => {
-    hideTyping();
-    addMsg('agent', 'Thanks for reaching out. To help you further, could you please share your order number and the registered email address on your account?');
-  }, 1400);
+  sendMerchantReply(v);
 }
 
 function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }

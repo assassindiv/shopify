@@ -356,6 +356,11 @@
       color: var(--brand);
     }
 
+    .quick-actions button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     @media (max-width: 880px) {
       .page {
         grid-template-columns: 1fr;
@@ -434,6 +439,7 @@
 
         <div class="quick-actions">
           <button type="button" data-demo="refund">Run suspicious refund demo</button>
+          <button type="button" id="proofButton">Submit photo proof</button>
           <button type="button" data-demo="tracking">Ask about ORD-1042</button>
           <button type="button" data-demo="policy">Ask return policy</button>
         </div>
@@ -453,9 +459,12 @@ const messages = document.getElementById("messages");
 const chatForm = document.getElementById("chatForm");
 const chatInput = document.getElementById("chatInput");
 const sendButton = document.getElementById("sendButton");
+const proofButton = document.getElementById("proofButton");
 const quickButtons = Array.from(document.querySelectorAll("[data-demo]"));
 
 const history = [];
+const renderedMessageKeys = new Set();
+let conversationId = localStorage.getItem("returnshieldConversationId");
 let typingRow = null;
 
     function addMessage(role, text, decision) {
@@ -499,6 +508,7 @@ function hideTyping() {
 
 function setBusy(isBusy) {
   sendButton.disabled = isBusy;
+  proofButton.disabled = isBusy;
   quickButtons.forEach((button) => {
     button.disabled = isBusy;
   });
@@ -537,6 +547,7 @@ async function sendToAgent(message) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       message,
+      conversationId,
       history: history.slice(0, -1).slice(-8),
     }),
   });
@@ -555,6 +566,8 @@ async function handleCustomerMessage(message) {
     setBusy(true);
     showTyping();
     const result = await sendToAgent(message);
+    conversationId = result.conversationId;
+    localStorage.setItem("returnshieldConversationId", conversationId);
     hideTyping();
     addMessage("agent", result.message, result.returnDecision);
   } catch (error) {
@@ -565,12 +578,53 @@ async function handleCustomerMessage(message) {
   }
 }
 
+async function startConversationIfNeeded() {
+  if (conversationId) return conversationId;
+
+  const response = await fetch(`${API_BASE}/conversations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ customerEmail: null }),
+  });
+  const conversation = await response.json();
+  conversationId = conversation.id;
+  localStorage.setItem("returnshieldConversationId", conversationId);
+  return conversationId;
+}
+
+async function pollConversation() {
+  if (!conversationId) return;
+
+  try {
+    const response = await fetch(`${API_BASE}/conversations/${conversationId}`);
+    if (!response.ok) return;
+    const conversation = await response.json();
+    if (conversation.id !== conversationId) {
+      conversationId = conversation.id;
+      localStorage.setItem("returnshieldConversationId", conversationId);
+    }
+
+    conversation.messages.forEach((message) => {
+      const key = `${message.createdAt}-${message.role}-${message.content}`;
+      if (renderedMessageKeys.has(key)) return;
+      renderedMessageKeys.add(key);
+
+      if (message.role === "merchant" || message.role === "system") {
+        addMessage("agent", message.role === "merchant" ? `Merchant support: ${message.content}` : message.content);
+      }
+    });
+  } catch (error) {
+    console.warn("Conversation polling failed:", error);
+  }
+}
+
     chatForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const text = chatInput.value.trim();
       if (!text) return;
 
       addMessage("user", text);
+      await startConversationIfNeeded();
       chatInput.value = "";
       chatInput.style.height = "auto";
       await handleCustomerMessage(text);
@@ -586,6 +640,7 @@ async function handleCustomerMessage(message) {
         const demo = button.dataset.demo;
 
         if (demo === "refund") {
+          await startConversationIfNeeded();
           const first = "I want a refund. The shoes arrived damaged.";
           const second = "ORD-1045, aarav@example.com";
           addMessage("user", first);
@@ -596,15 +651,42 @@ async function handleCustomerMessage(message) {
         }
 
     if (demo === "tracking") {
+      await startConversationIfNeeded();
       addMessage("user", "Where is my order ORD-1042?");
       await handleCustomerMessage("Where is my order ORD-1042?");
       return;
     }
 
+    await startConversationIfNeeded();
     addMessage("user", "What is your return policy?");
     await handleCustomerMessage("What is your return policy?");
   });
 });
+
+proofButton.addEventListener("click", async () => {
+  await startConversationIfNeeded();
+  try {
+    setBusy(true);
+    const response = await fetch(`${API_BASE}/conversations/${conversationId}/evidence`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        photoProofProvided: true,
+        note: "Photo proof uploaded in demo.",
+      }),
+    });
+    if (!response.ok) throw new Error("Could not submit proof.");
+    addMessage("user", "I uploaded photo proof of the damaged item.");
+    addMessage("agent", "Thanks, I attached the proof to your case. A merchant support specialist can now review it.");
+  } catch (error) {
+    addMessage("agent", error.message);
+  } finally {
+    setBusy(false);
+  }
+});
+
+setInterval(pollConversation, 5000);
+startConversationIfNeeded().catch(() => {});
   </script>
 </body>
 

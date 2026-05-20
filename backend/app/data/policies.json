@@ -1,0 +1,27 @@
+[
+  {
+    "id": "return_policy",
+    "title": "Return Policy",
+    "content": "Most returnable products can be returned within their configured return window if unused, undamaged by the customer, and sent back with original packaging."
+  },
+  {
+    "id": "refund_policy",
+    "title": "Refund Policy",
+    "content": "Refunds are approved after order verification, eligibility checks, and risk review. High-risk refund requests may require evidence or human review."
+  },
+  {
+    "id": "damage_policy",
+    "title": "Damaged Item Policy",
+    "content": "Customers reporting damaged items should provide clear photo or video proof before refund approval. Replacement or store credit may be offered after review."
+  },
+  {
+    "id": "exchange_policy",
+    "title": "Exchange Policy",
+    "content": "Size and fit issues should prioritize exchange when stock is available. Exchanges are preferred over refunds for low-risk eligible returns."
+  },
+  {
+    "id": "sale_item_policy",
+    "title": "Sale Item Policy",
+    "content": "Sale items are generally not refundable unless they arrive damaged or the wrong item was delivered."
+  }
+]

@@ -1,5 +1,6 @@
 from app.core.errors import AppError
-from app.models.ticket import Ticket, TicketCreate, TicketCreateResponse
+from app.core.errors import AppError
+from app.models.ticket import Ticket, TicketCreate, TicketCreateResponse, TicketUpdate
 from app.services.data_store import load_json, save_json
 from app.services.order_service import get_customer
 
@@ -18,6 +19,18 @@ def _save_tickets() -> None:
 
 def list_tickets() -> list[Ticket]:
     return _tickets
+
+
+def get_ticket(ticket_id: str) -> Ticket:
+    for ticket in _tickets:
+        if ticket.id == ticket_id:
+            return ticket
+
+    raise AppError(
+        code="TICKET_NOT_FOUND",
+        message="No ticket was found for the provided ticket ID.",
+        status_code=404,
+    )
 
 
 def create_ticket(payload: TicketCreate) -> TicketCreateResponse:
@@ -41,11 +54,28 @@ def create_ticket(payload: TicketCreate) -> TicketCreateResponse:
         riskScore=payload.risk_score,
         suggestedAction=payload.suggested_action,
         status=status,
+        evidenceProvided=False,
     )
     _tickets.append(ticket)
     _save_tickets()
 
     return TicketCreateResponse(id=ticket.id, status=ticket.status)
+
+
+def update_ticket(ticket_id: str, payload: TicketUpdate) -> Ticket:
+    ticket = get_ticket(ticket_id)
+
+    if payload.status is not None:
+        ticket.status = payload.status
+    if payload.suggested_action is not None:
+        ticket.suggested_action = payload.suggested_action
+    if payload.evidence_provided is not None:
+        ticket.evidence_provided = payload.evidence_provided
+        if payload.evidence_provided and ticket.status == "Evidence Required":
+            ticket.status = "Human Review"
+
+    _save_tickets()
+    return ticket
 
 
 def create_return_ticket(

@@ -206,6 +206,75 @@ Response:
 ]
 ```
 
+## List Customer Conversations
+
+```http
+GET /api/conversations
+```
+
+Create a session:
+
+```http
+POST /api/conversations
+```
+
+Merchant reply:
+
+```http
+POST /api/conversations/{conversation_id}/messages
+```
+
+Submit customer evidence:
+
+```http
+POST /api/conversations/{conversation_id}/evidence
+```
+
+Response:
+
+```json
+[
+  {
+    "id": "C-1001",
+    "customerEmail": "aarav@example.com",
+    "orderId": "ORD-1045",
+    "intent": "refund_request",
+    "status": "Escalated",
+    "riskLevel": "High",
+    "ticketId": "T-104",
+    "updatedAt": "2026-05-20T12:00:00Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "I want a refund. The shoes arrived damaged.",
+        "createdAt": "2026-05-20T12:00:00Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Please upload a clear photo of the damaged shoes.",
+        "createdAt": "2026-05-20T12:00:00Z"
+      }
+    ]
+  }
+]
+```
+
+## Update Ticket Status
+
+```http
+PATCH /api/tickets/{ticket_id}
+```
+
+Request:
+
+```json
+{
+  "status": "Approved",
+  "suggestedAction": "Approve refund",
+  "evidenceProvided": true
+}
+```
+
 ## Dashboard Overview
 
 ```http

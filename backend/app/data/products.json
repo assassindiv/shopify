@@ -7,7 +7,14 @@
     "returnable": true,
     "returnWindowDays": 7,
     "stock": 12,
-    "highRiskCategory": false
+    "highRiskCategory": false,
+    "description": "Lightweight running shoes with breathable mesh, cushioned sole, and everyday streetwear styling.",
+    "attributes": {
+      "sizes": ["7", "8", "9", "10", "11"],
+      "color": "Black and white",
+      "material": "Mesh upper with rubber outsole",
+      "waterResistance": "Light splash resistance only"
+    }
   },
   {
     "id": "PROD-202",
@@ -17,6 +24,13 @@
     "returnable": true,
     "returnWindowDays": 7,
     "stock": 31,
-    "highRiskCategory": false
+    "highRiskCategory": false,
+    "description": "Soft cotton hoodie for everyday wear.",
+    "attributes": {
+      "sizes": ["S", "M", "L", "XL"],
+      "color": "Navy",
+      "material": "Cotton blend",
+      "waterResistance": "Not water resistant"
+    }
   }
 ]

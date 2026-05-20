@@ -24,6 +24,7 @@ class ChatMessage(ApiModel):
 
 class ChatRequest(ApiModel):
     message: str
+    conversation_id: str | None = Field(default=None, alias="conversationId")
     history: list[ChatMessage] = Field(default_factory=list)
 
 
@@ -45,6 +46,7 @@ class ChatExtraction(ApiModel):
 
 class ChatResponse(ApiModel):
     message: str
+    conversation_id: str = Field(alias="conversationId")
     intent: ChatIntent
     extraction: ChatExtraction
     return_decision: ReturnCheckResponse | None = Field(

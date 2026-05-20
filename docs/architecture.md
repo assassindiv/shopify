@@ -95,6 +95,51 @@ Recommended action
         +--> Ticket creation when evidence or human review is needed
 ```
 
+## AI Agent Workflow
+
+The customer chat is handled as an AI agent pipeline, not as a fixed template bot.
+
+```text
+Customer message
+        |
+        v
+Groq LLM parses message + recent chat history
+        |
+        v
+Intent classification
+  - order_tracking
+  - product_question
+  - policy_question
+  - return_request
+  - refund_request
+  - exchange_request
+  - unknown
+        |
+        v
+Field extraction
+  - order ID
+  - customer email
+  - return reason
+  - proof availability
+        |
+        v
+Backend tools run deterministic checks
+  - order lookup
+  - product lookup
+  - policy context
+  - return eligibility
+  - risk scoring
+  - ticket creation
+        |
+        v
+Groq LLM writes the customer response using tool results
+        |
+        v
+Conversation is logged for merchant Live Chat
+```
+
+The rule-based engine remains the source of truth for eligibility, risk score, and ticket creation. The LLM is responsible for understanding natural language and composing the final response.
+
 ## Risk Scoring Inputs
 
 - Customer return frequency.

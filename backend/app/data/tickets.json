@@ -8,6 +8,19 @@
     "riskLevel": "Low",
     "riskScore": 10,
     "suggestedAction": "Recommend exchange",
-    "status": "Open"
+    "status": "Open",
+    "evidenceProvided": false
+  },
+  {
+    "id": "T-104",
+    "orderId": "ORD-1045",
+    "customerId": "CUS-501",
+    "customerName": "Aarav Sharma",
+    "issue": "Damaged item",
+    "riskLevel": "High",
+    "riskScore": 75,
+    "suggestedAction": "Request photo proof and escalate if unclear",
+    "status": "Approved",
+    "evidenceProvided": false
   }
 ]

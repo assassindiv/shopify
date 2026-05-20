@@ -1,0 +1,252 @@
+[
+  {
+    "id": "C-1001",
+    "customerEmail": null,
+    "orderId": "ORD-1042",
+    "intent": "order_tracking",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:09:41Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "Where is my order ORD-1042?",
+        "createdAt": "2026-05-20T13:09:41Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you for reaching out about your order ORD-1042. According to our records, your order is currently Out for delivery and is expected to be delivered today by 8 PM. You can track the status of your order using the tracking ID BD-48291-IND with Blue Dart. If you have any further questions or concerns, please let us know.",
+        "createdAt": "2026-05-20T13:09:41Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1002",
+    "customerEmail": null,
+    "orderId": null,
+    "intent": "product_question",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:09:45Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "Is the Everyday Cotton Hoodie available in size M?",
+        "createdAt": "2026-05-20T13:09:45Z"
+      },
+      {
+        "role": "assistant",
+        "content": "The Everyday Cotton Hoodie is available in sizes S, M, L, and XL. Would you like to know more about this product or proceed with your order?",
+        "createdAt": "2026-05-20T13:09:45Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1003",
+    "customerEmail": null,
+    "orderId": null,
+    "intent": "product_question",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:09:49Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "Is this backpack waterproof?",
+        "createdAt": "2026-05-20T13:09:49Z"
+      },
+      {
+        "role": "assistant",
+        "content": "The Urban Runner Shoes have light splash resistance only, but the Everyday Cotton Hoodie is not water resistant. If you have any other questions or need further clarification, please let us know.",
+        "createdAt": "2026-05-20T13:09:49Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1004",
+    "customerEmail": null,
+    "orderId": null,
+    "intent": "policy_question",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:09:53Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "What is your return policy?",
+        "createdAt": "2026-05-20T13:09:53Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Our return policy allows for returns of unused, undamaged products within their configured return window. If you'd like to initiate a return, please provide your order number and a clear reason for the return so we can assist you further.",
+        "createdAt": "2026-05-20T13:09:53Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1005",
+    "customerEmail": "aarav@example.com",
+    "orderId": "ORD-1045",
+    "intent": "exchange_request",
+    "status": "Open",
+    "riskLevel": "Medium",
+    "ticketId": "T-104",
+    "updatedAt": "2026-05-20T13:10:54Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "I want to return this item. ORD-1045, aarav@example.com",
+        "createdAt": "2026-05-20T13:10:48Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you for reaching out about returning ORD-1045. Since your return request is eligible, we need more evidence to process it. Please provide photos or videos of the item's condition and any packaging damage. This will help us assess your claim further. Your return window is 1 day, as you've had the item for 6 days. If you have any questions or concerns, feel free to reply to this ticket (T-104).",
+        "createdAt": "2026-05-20T13:10:48Z"
+      },
+      {
+        "role": "customer",
+        "content": "My product arrived damaged. ORD-1045, aarav@example.com",
+        "createdAt": "2026-05-20T13:10:51Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you for reaching out about the damaged item. Since the item is within the return window, your request is eligible for review. To proceed, please upload a clear photo of the damaged product to help us assess the issue. Once we receive the photo, we'll be happy to offer a replacement, store credit, or escalate this to our support team if needed.",
+        "createdAt": "2026-05-20T13:10:51Z"
+      },
+      {
+        "role": "customer",
+        "content": "Can I exchange this instead of refunding? ORD-1045, aarav@example.com",
+        "createdAt": "2026-05-20T13:10:54Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you for reaching out. Since your return is eligible, we would like to request more evidence to support your exchange request. Please provide a clear photo of the item in its original condition and any other relevant details. We will review your request once we receive this information.",
+        "createdAt": "2026-05-20T13:10:54Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1006",
+    "customerEmail": null,
+    "orderId": "ORD-1042",
+    "intent": "order_tracking",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:20:39Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "Is this backpack waterproof?",
+        "createdAt": "2026-05-20T13:12:35Z"
+      },
+      {
+        "role": "assistant",
+        "content": "The Urban Runner Shoes have light splash resistance only, but they are not fully waterproof. The Everyday Cotton Hoodie is not water resistant at all. If you have any other questions or need further assistance, please let us know.",
+        "createdAt": "2026-05-20T13:12:35Z"
+      },
+      {
+        "role": "customer",
+        "content": "Where is my order ORD-1042?",
+        "createdAt": "2026-05-20T13:20:39Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you for reaching out about your order ORD-1042. According to our records, your order is currently Out for delivery and is expected to be delivered today by 8 PM. You can track the status of your order using the tracking ID BD-48291-IND with Blue Dart. If you have any further questions or concerns, please let us know.",
+        "createdAt": "2026-05-20T13:20:39Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1007",
+    "customerEmail": null,
+    "orderId": null,
+    "intent": "product_question",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:12:37Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "Is the Everyday Cotton Hoodie available in size M?",
+        "createdAt": "2026-05-20T13:12:37Z"
+      },
+      {
+        "role": "assistant",
+        "content": "According to our catalog, the Everyday Cotton Hoodie is available in sizes S, M, L, and XL. Unfortunately, we don't have information on the availability of size M in other products or collections. If you have any other questions or need further assistance, please let us know.",
+        "createdAt": "2026-05-20T13:12:37Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1008",
+    "customerEmail": null,
+    "orderId": null,
+    "intent": "policy_question",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:12:42Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "What is your return policy?",
+        "createdAt": "2026-05-20T13:12:42Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Our return policy states that most returnable products can be returned within their configured return window if unused, undamaged by the customer, and sent back with original packaging. If you have any further questions or concerns, please let me know.",
+        "createdAt": "2026-05-20T13:12:42Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1009",
+    "customerEmail": null,
+    "orderId": null,
+    "intent": "product_question",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:14:18Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "Is this backpack waterproof?",
+        "createdAt": "2026-05-20T13:14:18Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Unfortunately, we don't have information about the specific backpack you're asking about in our catalog. Could you please provide more details or check the product description for the 'Water Resistance' attribute?",
+        "createdAt": "2026-05-20T13:14:18Z"
+      }
+    ]
+  },
+  {
+    "id": "C-1010",
+    "customerEmail": null,
+    "orderId": null,
+    "intent": "product_question",
+    "status": "Open",
+    "riskLevel": null,
+    "ticketId": null,
+    "updatedAt": "2026-05-20T13:14:22Z",
+    "messages": [
+      {
+        "role": "customer",
+        "content": "Is the Everyday Cotton Hoodie available in size M?",
+        "createdAt": "2026-05-20T13:14:22Z"
+      },
+      {
+        "role": "assistant",
+        "content": "According to our catalog, the Everyday Cotton Hoodie is available in sizes S, M, L, and XL. Unfortunately, we don't have information on other sizes or variations. If you have any other questions or need further assistance, please let us know.",
+        "createdAt": "2026-05-20T13:14:22Z"
+      }
+    ]
+  }
+]

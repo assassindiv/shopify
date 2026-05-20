@@ -5,7 +5,16 @@
     "productId": "PROD-201",
     "status": "Delivered",
     "deliveredAt": "2026-05-14",
-    "amount": 5499
+    "amount": 5499,
+    "carrier": "Delhivery",
+    "trackingId": "DLV-92831-IN",
+    "expectedDelivery": "Delivered on 2026-05-14",
+    "timeline": [
+      "Packed at warehouse",
+      "Shipped from Bengaluru hub",
+      "Out for delivery",
+      "Delivered to customer"
+    ]
   },
   {
     "id": "ORD-1042",
@@ -13,6 +22,15 @@
     "productId": "PROD-202",
     "status": "Out for delivery",
     "deliveredAt": null,
-    "amount": 1999
+    "amount": 1999,
+    "carrier": "Blue Dart",
+    "trackingId": "BD-48291-IND",
+    "expectedDelivery": "Today by 8 PM",
+    "timeline": [
+      "Packed",
+      "Shipped",
+      "Reached local delivery hub",
+      "Out for delivery"
+    ]
   }
 ]

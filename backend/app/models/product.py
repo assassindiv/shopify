@@ -12,3 +12,5 @@ class Product(ApiModel):
     return_window_days: int = Field(alias="returnWindowDays")
     stock: int
     high_risk_category: bool = Field(default=False, alias="highRiskCategory")
+    description: str | None = None
+    attributes: dict[str, object] = {}

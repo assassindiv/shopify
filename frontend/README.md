@@ -39,6 +39,10 @@ http://localhost:5500/frontend/merchant.html
 3. Click `Run suspicious refund demo`.
 4. Open `merchant.html`.
 5. The ticket queue should show `T-104` as a high-risk damaged-item case.
+6. Open `merchant.html` -> `Live Chat`.
+7. Select the customer conversation and send a merchant reply.
+8. Return to `customer.html`; the merchant reply appears after polling.
+9. Click `Submit photo proof`; the merchant ticket moves toward human review.
 
 ## Planned Areas
 

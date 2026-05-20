@@ -4,9 +4,30 @@ from app.core.config import GROQ_MODEL
 from app.models.chat import ChatExtraction, ChatRequest, ChatResponse
 from app.models.return_request import ReturnCheckRequest
 from app.services.catalog_service import get_product, list_products
+from app.services.conversation_service import record_chat_turn
 from app.services.groq_service import groq_chat_json
 from app.services.order_service import get_order
 from app.services.return_service import check_return
+from app.services.data_store import load_json
+
+
+def _matching_products(message: str) -> list[dict]:
+    normalized = message.lower()
+    matches = []
+
+    for product in list_products():
+        terms = set(product.name.lower().split())
+        terms.add(product.category.lower())
+        attributes = product.attributes or {}
+        for value in attributes.values():
+            if isinstance(value, str):
+                terms.update(value.lower().replace("/", " ").split())
+        useful_terms = {term.strip(".,!?") for term in terms if len(term) >= 4}
+
+        if any(term in normalized for term in useful_terms):
+            matches.append(product.model_dump(by_alias=True))
+
+    return matches
 
 
 EXTRACTION_PROMPT = """
@@ -40,30 +61,31 @@ Extract:
 - photoProofProvided
 - needsMoreInfo
 
+Use the latest message and conversation history together. If the latest message only
+contains missing details like order ID or email, infer the intent and reason from the
+previous customer messages.
+
 Set needsMoreInfo true when a return/refund/exchange request is missing orderId or customerEmail.
 Use null for missing strings. Do not invent values.
 """
 
 RESPONSE_PROMPT = """
 You are ReturnShield, a Shopify-native customer support agent.
-Write a concise, helpful customer-facing reply.
+Write a concise, helpful customer-facing reply from the classified intent, extracted fields,
+and tool results.
 
 Rules:
 - Do not change the eligibility, risk score, risk level, risk reasons, ticket ID, or recommended action.
 - If a return decision is provided, explain the next step clearly.
 - If tool context is provided, use only that context for order, product, and policy facts.
+- For product questions, if the customer asks about a product or detail not present in the catalog context, say you do not have that catalog information. Do not answer using a different product.
+- For policy questions, mention the relevant policy title when possible.
 - If information is missing, ask only for what is missing.
+- Do not copy a prewritten template verbatim. Generate a natural response for this exact customer message.
+- Mention evidence, escalation, exchange, replacement, refund, or store credit only when supported by the tool result.
 - Keep the tone professional and calm.
 - Return only JSON with this shape: {"message": "..."}.
 """
-
-POLICY_CONTEXT = {
-    "returnPolicy": "Most returnable items can be returned within the product return window if unused and in acceptable condition.",
-    "refundPolicy": "Refunds are approved after eligibility and risk checks. High-risk refunds require human review or evidence.",
-    "damagePolicy": "Damaged-item claims may require photo or video proof before refund approval.",
-    "exchangePolicy": "Size and fit issues should prioritize exchange when stock is available.",
-    "saleItemPolicy": "Sale items are not usually refundable unless damaged or the wrong item was delivered.",
-}
 
 
 async def handle_chat(payload: ChatRequest) -> ChatResponse:
@@ -101,12 +123,17 @@ async def handle_chat(payload: ChatRequest) -> ChatResponse:
             "product": product.model_dump(by_alias=True),
         }
     elif extraction.intent == "policy_question":
-        tool_context = {"policies": POLICY_CONTEXT}
+        tool_context = {"policies": load_json("policies.json")}
     elif extraction.intent == "product_question":
+        matches = _matching_products(payload.message)
         tool_context = {
-            "products": [
-                product.model_dump(by_alias=True) for product in list_products()
-            ]
+            "products": matches,
+            "catalogNote": (
+                "No matching product was found in the store catalog. "
+                "Tell the customer you do not have enough catalog data to answer."
+                if not matches
+                else "Use only these matching catalog products."
+            ),
         }
 
     response_raw = await groq_chat_json(
@@ -126,8 +153,21 @@ async def handle_chat(payload: ChatRequest) -> ChatResponse:
         temperature=0.2,
     )
 
+    message = response_raw.get("message", "I can help with that.")
+    conversation = record_chat_turn(
+        customer_message=payload.message,
+        assistant_message=message,
+        intent=extraction.intent,
+        customer_email=extraction.customer_email,
+        order_id=extraction.order_id,
+        risk_level=return_decision.risk_level if return_decision else None,
+        ticket_id=return_decision.ticket_id if return_decision else None,
+        conversation_id=payload.conversation_id,
+    )
+
     return ChatResponse(
-        message=response_raw.get("message", "I can help with that."),
+        message=message,
+        conversationId=conversation.id,
         intent=extraction.intent,
         extraction=extraction,
         returnDecision=return_decision,

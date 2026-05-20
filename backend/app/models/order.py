@@ -10,3 +10,7 @@ class Order(ApiModel):
     status: str
     delivered_at: str | None = Field(alias="deliveredAt")
     amount: int
+    carrier: str | None = None
+    tracking_id: str | None = Field(default=None, alias="trackingId")
+    expected_delivery: str | None = Field(default=None, alias="expectedDelivery")
+    timeline: list[str] = []

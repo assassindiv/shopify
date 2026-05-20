@@ -13,6 +13,7 @@ class Ticket(ApiModel):
     risk_score: int = Field(alias="riskScore")
     suggested_action: str = Field(alias="suggestedAction")
     status: str
+    evidence_provided: bool = Field(default=False, alias="evidenceProvided")
 
 
 class TicketCreate(ApiModel):
@@ -27,3 +28,9 @@ class TicketCreate(ApiModel):
 class TicketCreateResponse(ApiModel):
     id: str
     status: str
+
+
+class TicketUpdate(ApiModel):
+    status: str | None = None
+    suggested_action: str | None = Field(default=None, alias="suggestedAction")
+    evidence_provided: bool | None = Field(default=None, alias="evidenceProvided")

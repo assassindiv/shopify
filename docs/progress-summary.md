@@ -4,6 +4,8 @@
 
 ReturnShield is now an MVP customer-merchant support system for Shopify-style stores. It combines a Groq-powered AI customer chat with a deterministic return decision engine and a merchant console.
 
+The MVP uses synthetic Shopify-style data, as allowed by the challenge. The data layer is isolated so local JSON services can later be replaced with Shopify Admin API adapters.
+
 ## Current Workflow
 
 ```text
@@ -42,6 +44,7 @@ Conversation and ticket appear in merchant console
 - Conversation sessions.
 - Merchant replies.
 - Dashboard metrics API.
+- Optional Shopify Admin GraphQL adapter with synthetic fallback.
 - CORS support for local frontend development.
 - Local `.env` support for `GROQ_API_KEY`.
 
@@ -134,10 +137,22 @@ System result:
 - Policy upload is simulated with `backend/app/data/policies.json`; there is no real upload UI yet.
 - Catalog and order data are mock JSON files.
 - There is no real Shopify API integration.
+- Shopify Admin GraphQL adapter exists, but defaults to synthetic data unless real credentials are configured.
 - There is no real authentication.
 - There is no production database.
 - Customer/merchant live updates use polling, not WebSockets.
 - There are not yet automated tests.
+
+## Shopify Integration Readiness
+
+Added [shopify-setup.md](./shopify-setup.md) to document:
+
+- Shopify Partner account setup.
+- Development store setup.
+- Custom app setup.
+- Admin API resources.
+- Mapping between current synthetic data and future Shopify API sources.
+- Suggested scopes for a real Shopify custom app.
 
 ## Suggested Next Steps
 

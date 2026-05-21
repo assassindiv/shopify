@@ -21,6 +21,28 @@ Response:
 }
 ```
 
+## Shopify Demo Adapter
+
+These endpoints use Shopify Admin GraphQL when credentials are configured, and synthetic Shopify-style data when credentials are missing.
+
+```http
+GET /api/shopify/shop
+GET /api/shopify/products?first=3
+```
+
+Synthetic response example:
+
+```json
+{
+  "source": "synthetic",
+  "shop": {
+    "name": "Synthetic ReturnShield Dev Store",
+    "myshopifyDomain": "synthetic-dev-store.myshopify.com",
+    "apiVersion": "2026-04"
+  }
+}
+```
+
 ## AI Chat
 
 Uses Groq to classify customer intent, extract order details, call ReturnShield tools, and write the customer-facing reply.

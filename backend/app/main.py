@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import chat, conversations, dashboard, health, orders, products, returns, risk, tickets
+from app.api import chat, conversations, dashboard, health, orders, products, returns, risk, shopify, tickets
 from app.core.config import API_PREFIX, APP_NAME
 from app.core.errors import AppError, app_error_handler
 
@@ -26,6 +26,7 @@ app.include_router(dashboard.router, prefix=API_PREFIX)
 app.include_router(products.router, prefix=API_PREFIX)
 app.include_router(orders.router, prefix=API_PREFIX)
 app.include_router(risk.router, prefix=API_PREFIX)
+app.include_router(shopify.router, prefix=API_PREFIX)
 app.include_router(returns.router, prefix=API_PREFIX)
 app.include_router(tickets.router, prefix=API_PREFIX)
 

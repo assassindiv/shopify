@@ -131,13 +131,13 @@
   },
   {
     "id": "C-1006",
-    "customerEmail": null,
-    "orderId": "ORD-1042",
-    "intent": "order_tracking",
+    "customerEmail": "aarav@example.com",
+    "orderId": "ORD-1045",
+    "intent": "refund_request",
     "status": "Open",
-    "riskLevel": null,
-    "ticketId": null,
-    "updatedAt": "2026-05-20T13:20:39Z",
+    "riskLevel": "Medium",
+    "ticketId": "T-104",
+    "updatedAt": "2026-05-20T13:39:05Z",
     "messages": [
       {
         "role": "customer",
@@ -158,6 +158,31 @@
         "role": "assistant",
         "content": "Thank you for reaching out about your order ORD-1042. According to our records, your order is currently Out for delivery and is expected to be delivered today by 8 PM. You can track the status of your order using the tracking ID BD-48291-IND with Blue Dart. If you have any further questions or concerns, please let us know.",
         "createdAt": "2026-05-20T13:20:39Z"
+      },
+      {
+        "role": "customer",
+        "content": "Customer uploaded photo/video proof. Note: Photo proof uploaded in demo.",
+        "createdAt": "2026-05-20T13:38:53Z"
+      },
+      {
+        "role": "customer",
+        "content": "I want a refund. The shoes arrived damaged.",
+        "createdAt": "2026-05-20T13:39:02Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you for reaching out about the damaged shoes. To process your refund, I'll need the order number and your email address associated with the purchase. Please provide this information so I can look into this further.",
+        "createdAt": "2026-05-20T13:39:02Z"
+      },
+      {
+        "role": "customer",
+        "content": "ORD-1045, aarav@example.com",
+        "createdAt": "2026-05-20T13:39:05Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you for reaching out about ORD-1045. Since the item is within the return window, your request is eligible for review. However, due to multiple recent damage-related refund claims on this account, I need a photo of the damaged product to proceed. Please upload the photo, and I'll be happy to assist you further.",
+        "createdAt": "2026-05-20T13:39:05Z"
       }
     ]
   },

@@ -51,6 +51,30 @@ backend/app
     ticket_service.py
 ```
 
+## Shopify Data Strategy
+
+The MVP uses synthetic Shopify-style data stored in local JSON files. This matches the challenge guidance that synthetic data is acceptable and keeps the focus on product thinking and engineering quality.
+
+```text
+Synthetic Shopify Data
+  products.json    -> Shopify products and variants
+  orders.json      -> Shopify orders and fulfillment status
+  customers.json   -> Shopify customers and return history
+  policies.json    -> merchant policy documents
+```
+
+The services are intentionally separated from the route layer so they can later be replaced with Shopify Admin API adapters.
+
+```text
+Current:
+API route -> service -> JSON data
+
+Future:
+API route -> Shopify adapter -> Shopify Admin API
+```
+
+Shopify provides facts such as orders, customers, products, and fulfillment state. ReturnShield remains responsible for return eligibility, abuse-risk scoring, recommended actions, and merchant escalation.
+
 ## Frontend Modules
 
 ```text
